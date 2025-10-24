@@ -78,6 +78,7 @@ class LocationViewModel extends ChangeNotifier {
   void markSpot() {
     if (_currentPosition != null) {
       final spot = Spot(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: 'Spot ${spots.length + 1}',
         latitude: _currentPosition!.latitude,
         longitude: _currentPosition!.longitude,

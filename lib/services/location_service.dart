@@ -185,6 +185,7 @@ class LocationService {
     }
 
     final spot = Spot(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       latitude: _currentLatitude!,
       longitude: _currentLongitude!,

@@ -6,11 +6,12 @@ class Spot {
   final DateTime timestamp;
 
   Spot({
+    required this.id,
     required this.name,
     required this.latitude,
     required this.longitude,
     required this.timestamp,
-  }) : id = DateTime.now().millisecondsSinceEpoch.toString();
+  });
 
   // JSON for storage (expand for GPX export)
   Map<String, dynamic> toJson() => {
@@ -22,6 +23,7 @@ class Spot {
       };
 
   factory Spot.fromJson(Map<String, dynamic> json) => Spot(
+        id: json['id'],
         name: json['name'],
         latitude: json['latitude'],
         longitude: json['longitude'],
