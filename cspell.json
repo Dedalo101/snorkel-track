@@ -4,6 +4,8 @@
     "viewmodel",
     "prefs",
     "geolocator",
-    "MVVM"
+    "MVVM",
+    "geospatial",
+    "pubspec"
   ]
 }
