@@ -3,6 +3,7 @@
     "viewmodels",
     "viewmodel",
     "prefs",
-    "geolocator"
+    "geolocator",
+    "MVVM"
   ]
 }
