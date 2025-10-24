@@ -24,7 +24,8 @@ class LocationViewModel extends ChangeNotifier {
       notifyListeners();
     });
     Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5),
+      locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high, distanceFilter: 5),
     ).listen((Position position) {
       _currentPosition = position;
       notifyListeners();
@@ -69,12 +70,16 @@ class LocationViewModel extends ChangeNotifier {
   (double rotation, double distance) getNavigationData() {
     if (_selectedSpot == null || _currentPosition == null) return (0, 0);
     final distance = Geolocator.distanceBetween(
-      _currentPosition!.latitude, _currentPosition!.longitude,
-      _selectedSpot!.latitude, _selectedSpot!.longitude,
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      _selectedSpot!.latitude,
+      _selectedSpot!.longitude,
     );
     double lat1 = _currentPosition!.latitude * 3.14159 / 180;
     double lat2 = _selectedSpot!.latitude * 3.14159 / 180;
-    double deltaLon = (_selectedSpot!.longitude - _currentPosition!.longitude) * 3.14159 / 180;
+    double deltaLon = (_selectedSpot!.longitude - _currentPosition!.longitude) *
+        3.14159 /
+        180;
     double y = sin(deltaLon) * cos(lat2);
     double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLon);
     double bearing = atan2(y, x) * 180 / 3.14159;
