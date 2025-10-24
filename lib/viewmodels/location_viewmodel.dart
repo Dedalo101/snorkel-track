@@ -1,14 +1,10 @@
-import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/spot.dart';
 
 class LocationViewModel extends ChangeNotifier {
-  static const String _spotsKey = 'snorkeling_spots';
-
   Position? _currentPosition;
   double _currentHeading = 0.0;
   final List<Spot> _spots = [];
@@ -22,53 +18,13 @@ class LocationViewModel extends ChangeNotifier {
   bool get isNavigating => _isNavigating;
 
   Future<void> initialize() async {
-    await _loadSpots();
-    await _requestPermissions();
-    _startListening();
-  }
-
-  Future<void> _loadSpots() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final spotsJson = prefs.getString(_spotsKey);
-      if (spotsJson != null) {
-        final List<dynamic> spotsList = json.decode(spotsJson);
-        _spots.addAll(spotsList.map((json) => Spot.fromJson(json)).toList());
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to load spots: $e');
-      }
-    }
-  }
-
-  Future<void> _saveSpots() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final spotsJson =
-          json.encode(_spots.map((spot) => spot.toJson()).toList());
-      await prefs.setString(_spotsKey, spotsJson);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to save spots: $e');
-      }
-    }
-  }
-
-  Future<void> _requestPermissions() async {
     await Geolocator.requestPermission();
     FlutterCompass.events!.listen((event) {
       _currentHeading = event.heading ?? 0.0;
       notifyListeners();
     });
-  }
-
-  void _startListening() {
     Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 5,
-      ),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5),
     ).listen((Position position) {
       _currentPosition = position;
       notifyListeners();
@@ -85,7 +41,6 @@ class LocationViewModel extends ChangeNotifier {
         timestamp: DateTime.now(),
       );
       _spots.add(spot);
-      _saveSpots();
       notifyListeners();
     }
   }
@@ -96,7 +51,6 @@ class LocationViewModel extends ChangeNotifier {
       _selectedSpot = null;
       _isNavigating = false;
     }
-    _saveSpots();
     notifyListeners();
   }
 
@@ -114,41 +68,18 @@ class LocationViewModel extends ChangeNotifier {
 
   (double rotation, double distance) getNavigationData() {
     if (_selectedSpot == null || _currentPosition == null) return (0, 0);
-    final spotPos = Position(
-      latitude: _selectedSpot!.latitude,
-      longitude: _selectedSpot!.longitude,
-      timestamp: DateTime.now(),
-      accuracy: 0,
-      altitude: 0,
-      heading: 0,
-      speed: 0,
-      speedAccuracy: 0,
-      altitudeAccuracy: 0,
-      headingAccuracy: 0,
-    );
     final distance = Geolocator.distanceBetween(
-      _currentPosition!.latitude,
-      _currentPosition!.longitude,
-      spotPos.latitude,
-      spotPos.longitude,
+      _currentPosition!.latitude, _currentPosition!.longitude,
+      _selectedSpot!.latitude, _selectedSpot!.longitude,
     );
-
-    // Bearing calc
-    final y = (spotPos.longitude - _currentPosition!.longitude).toRadians();
-    final x = cos(_currentPosition!.latitude.toRadians()) *
-            sin(spotPos.latitude.toRadians()) -
-        sin(_currentPosition!.latitude.toRadians()) *
-            cos(spotPos.latitude.toRadians()) *
-            cos(y);
-    var bearing = (atan2(y, x) * 180 / pi) + 360;
-    if (bearing >= 360) bearing -= 360;
+    double lat1 = _currentPosition!.latitude * 3.14159 / 180;
+    double lat2 = _selectedSpot!.latitude * 3.14159 / 180;
+    double deltaLon = (_selectedSpot!.longitude - _currentPosition!.longitude) * 3.14159 / 180;
+    double y = sin(deltaLon) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLon);
+    double bearing = atan2(y, x) * 180 / 3.14159;
+    if (bearing < 0) bearing += 360;
     final rotation = bearing - _currentHeading;
-
     return (rotation, distance);
   }
-}
-
-// Extension for radians (add to utils if needed)
-extension NumExtension on num {
-  double toRadians() => this * pi / 180;
 }
