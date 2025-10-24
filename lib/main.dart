@@ -100,10 +100,7 @@ class _SpotNavigatorScreenState extends State<SpotNavigatorScreen> {
                     subtitle: const Text(''), // Time only
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        // Remove logic (add to VM)
-                        setState(() {}); // Refresh
-                      },
+                      onPressed: () => vm.removeSpot(spot.id),
                     ),
                     onTap: () => vm.selectSpot(spot),
                   ),

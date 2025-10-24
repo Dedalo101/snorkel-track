@@ -1,10 +1,14 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/spot.dart';
 
 class LocationViewModel extends ChangeNotifier {
+  static const String _spotsKey = 'snorkeling_spots';
+
   Position? _currentPosition;
   double _currentHeading = 0.0;
   final List<Spot> _spots = [];
@@ -18,8 +22,37 @@ class LocationViewModel extends ChangeNotifier {
   bool get isNavigating => _isNavigating;
 
   Future<void> initialize() async {
+    await _loadSpots();
     await _requestPermissions();
     _startListening();
+  }
+
+  Future<void> _loadSpots() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final spotsJson = prefs.getString(_spotsKey);
+      if (spotsJson != null) {
+        final List<dynamic> spotsList = json.decode(spotsJson);
+        _spots.addAll(spotsList.map((json) => Spot.fromJson(json)).toList());
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to load spots: $e');
+      }
+    }
+  }
+
+  Future<void> _saveSpots() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final spotsJson =
+          json.encode(_spots.map((spot) => spot.toJson()).toList());
+      await prefs.setString(_spotsKey, spotsJson);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to save spots: $e');
+      }
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -51,9 +84,19 @@ class LocationViewModel extends ChangeNotifier {
         timestamp: DateTime.now(),
       );
       _spots.add(spot);
+      _saveSpots();
       notifyListeners();
-      // Save to prefs (MVP; async later)
     }
+  }
+
+  void removeSpot(String spotId) {
+    _spots.removeWhere((spot) => spot.id == spotId);
+    if (_selectedSpot?.id == spotId) {
+      _selectedSpot = null;
+      _isNavigating = false;
+    }
+    _saveSpots();
+    notifyListeners();
   }
 
   void selectSpot(Spot spot) {
