@@ -1,5 +1,5 @@
 name: snorkel_track
-description: SnorkelTrack MVP - GPS spots & nav.
+description: Cross-platform snorkeling GPS logger & navigator (Flutter MVP for iOS/Android).
 
 publish_to: 'none'
 
@@ -11,11 +11,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  geolocator: ^10.1.0  # GPS core
-  permission_handler: ^11.0.1  # Perms
-  flutter_compass: ^0.8.0  # For arrow heading (add for compass)
-  shared_preferences: ^2.2.2  # Offline storage (MVP; swap to Hive later)
-  provider: ^6.1.1  # State management
+  geolocator: ^10.1.0  # GPS logging
+  permission_handler: ^11.0.1  # Location perms
+  flutter_compass: ^0.8.0  # Arrow heading
+  provider: ^6.1.1  # MVVM state magic
+  shared_preferences: ^2.2.2  # Offline spot saves
 
 dev_dependencies:
   flutter_test:
@@ -24,4 +24,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  # Add assets later: images/ for water icons
