@@ -18,7 +18,9 @@ class SnorkelTrackApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SnorkelTrack',
-      theme: ThemeData(primarySwatch: Colors.teal, scaffoldBackgroundColor: Colors.blue.shade50),
+      theme: ThemeData(
+          primarySwatch: Colors.teal,
+          scaffoldBackgroundColor: Colors.blue.shade50),
       home: const SpotNavigatorScreen(),
     );
   }
@@ -30,9 +32,11 @@ class SpotNavigatorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SnorkelTrack'), backgroundColor: Colors.teal),
+      appBar: AppBar(
+          title: const Text('SnorkelTrack'), backgroundColor: Colors.teal),
       body: Consumer<LocationViewModel>(
-        builder: (context, vm, child) => vm.isNavigating ? _NavView(vm: vm) : _MarkView(vm: vm),
+        builder: (context, vm, child) =>
+            vm.isNavigating ? _NavView(vm: vm) : _MarkView(vm: vm),
       ),
     );
   }
@@ -52,7 +56,8 @@ class _MarkView extends StatelessWidget {
             onPressed: vm.markSpot,
             icon: const Icon(Icons.add_location),
             label: const Text('Mark Spot', style: TextStyle(fontSize: 18)),
-            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 60)),
+            style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 60)),
           ),
           const SizedBox(height: 20),
           Expanded(
@@ -65,7 +70,7 @@ class _MarkView extends StatelessWidget {
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () {
                     vm.spots.removeAt(i);
-                    (context as Element).markNeedsBuild();  // Refresh hack
+                    (context as Element).markNeedsBuild(); // Refresh hack
                   },
                 ),
               ),
@@ -93,9 +98,12 @@ class _NavView extends StatelessWidget {
             angle: data.$1 * 3.14159 / 180,
             child: const Icon(Icons.navigation, size: 100, color: Colors.teal),
           ),
-          Text(vm.selectedSpot!.name, style: Theme.of(context).textTheme.headlineSmall),
+          Text(vm.selectedSpot!.name,
+              style: Theme.of(context).textTheme.headlineSmall),
           Text(
-            data.$2 < 1000 ? '${data.$2.toInt()}m' : '${(data.$2 / 1000).toStringAsFixed(1)}km',
+            data.$2 < 1000
+                ? '${data.$2.toInt()}m'
+                : '${(data.$2 / 1000).toStringAsFixed(1)}km',
             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           ElevatedButton(
