@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'viewmodels/location_viewmodel.dart';
+import 'services/location_service.dart';
 
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (context) => LocationViewModel()..initialize(),
+      create: (context) => LocationService()..initialize(),
       child: const SnorkelTrackApp(),
     ),
   );
@@ -34,7 +34,7 @@ class SpotNavigatorScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
           title: const Text('SnorkelTrack'), backgroundColor: Colors.teal),
-      body: Consumer<LocationViewModel>(
+      body: Consumer<LocationService>(
         builder: (context, vm, child) =>
             vm.isNavigating ? _NavView(vm: vm) : _MarkView(vm: vm),
       ),
@@ -43,7 +43,7 @@ class SpotNavigatorScreen extends StatelessWidget {
 }
 
 class _MarkView extends StatelessWidget {
-  final LocationViewModel vm;
+  final LocationService vm;
   const _MarkView({required this.vm});
 
   @override
@@ -68,10 +68,7 @@ class _MarkView extends StatelessWidget {
                 onTap: () => vm.selectSpot(vm.spots[i]),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    vm.spots.removeAt(i);
-                    (context as Element).markNeedsBuild(); // Refresh hack
-                  },
+                  onPressed: () => vm.removeSpotByIndex(i),
                 ),
               ),
             ),
@@ -83,7 +80,7 @@ class _MarkView extends StatelessWidget {
 }
 
 class _NavView extends StatelessWidget {
-  final LocationViewModel vm;
+  final LocationService vm;
   const _NavView({required this.vm});
 
   @override

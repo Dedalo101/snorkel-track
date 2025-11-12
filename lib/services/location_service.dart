@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/spot.dart';
 
 /// Service for managing location and snorkeling spots
-class LocationService {
+class LocationService extends ChangeNotifier {
   static const String _spotsKey = 'snorkeling_spots';
 
   // Current location
@@ -39,13 +39,16 @@ class LocationService {
   double? get currentLongitude => _currentLongitude;
   bool get isLocationLoading => _isLocationLoading;
   String? get locationError => _locationError;
-  List<Spot> get spots => List.unmodifiable(_spots);
+  List<Spot> get spots => _spots; // Mutable for UI compatibility
   Spot? get selectedSpot => _selectedSpot;
   double? get targetLatitude => _targetLatitude;
   double? get targetLongitude => _targetLongitude;
   double? get distanceToTarget => _distanceToTarget;
   double? get bearingToTarget => _bearingToTarget;
   double? get currentHeading => _currentHeading;
+  
+  // UI Compatibility getters
+  bool get isNavigating => _selectedSpot != null;
 
   /// Initialize location services and load saved spots
   Future<void> initialize() async {
@@ -62,6 +65,7 @@ class LocationService {
         if (_targetLatitude != null && _targetLongitude != null) {
           _updateNavigation();
         }
+        notifyListeners(); // Notify UI of compass updates
       });
     } catch (e) {
       if (kDebugMode) {
@@ -133,10 +137,12 @@ class LocationService {
       }
 
       _isLocationLoading = false;
+      notifyListeners(); // Notify UI of location updates
       return true;
     } catch (e) {
       _locationError = 'Failed to get current location: ${e.toString()}';
       _isLocationLoading = false;
+      notifyListeners(); // Notify UI of errors
       return false;
     }
   }
@@ -204,6 +210,7 @@ class LocationService {
       // Haptic feedback not available on this platform
     }
 
+    notifyListeners(); // Notify UI of new spot
     return true;
   }
 
@@ -218,6 +225,7 @@ class LocationService {
       _bearingToTarget = null;
     }
     await _saveSpots();
+    notifyListeners(); // Notify UI of spot removal
   }
 
   /// Select a spot for navigation
@@ -226,6 +234,7 @@ class LocationService {
     _targetLatitude = spot.latitude;
     _targetLongitude = spot.longitude;
     _updateNavigation();
+    notifyListeners(); // Notify UI of navigation start
   }
 
   /// Clear navigation target
@@ -235,6 +244,7 @@ class LocationService {
     _targetLongitude = null;
     _distanceToTarget = null;
     _bearingToTarget = null;
+    notifyListeners(); // Notify UI of navigation stop
   }
 
   /// Update navigation calculations
@@ -309,6 +319,44 @@ class LocationService {
     }
   }
 
+  // UI Compatibility methods to match LocationViewModel interface
+  
+  /// Mark a spot at current location with auto-generated name
+  Future<void> markSpot() async {
+    final spotCount = spots.length + 1;
+    await addSpotAtCurrentLocation('Spot $spotCount');
+  }
+  
+  /// Remove a spot by index (for UI compatibility)
+  Future<void> removeSpotByIndex(int index) async {
+    if (index >= 0 && index < _spots.length) {
+      final spotId = _spots[index].id;
+      await removeSpot(spotId);
+    }
+  }
+  
+  /// Stop navigation (alias for clearNavigation)
+  void stopNavigating() {
+    clearNavigation();
+  }
+  
+  /// Get navigation data in format expected by UI (rotation angle, distance)
+  (double rotation, double distance) getNavigationData() {
+    final bearing = _bearingToTarget;
+    final distance = _distanceToTarget ?? 0.0;
+    final heading = _currentHeading ?? 0.0;
+    
+    if (bearing == null) return (0, 0);
+    
+    // Calculate rotation relative to current heading
+    double rotation = bearing - heading;
+    // Normalize to -180 to 180 degrees
+    while (rotation > 180) rotation -= 360;
+    while (rotation < -180) rotation += 360;
+    
+    return (rotation, distance);
+  }
+
   /// Get compass direction from bearing
   String getCompassDirection(double? bearing) {
     if (bearing == null) return 'Unknown';
@@ -319,7 +367,9 @@ class LocationService {
   }
 
   /// Dispose resources
+  @override
   void dispose() {
     _compassSubscription?.cancel();
+    super.dispose();
   }
 }

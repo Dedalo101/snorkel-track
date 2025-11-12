@@ -5,21 +5,27 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:snorkel_track/main.dart';
+import 'package:snorkel_track/services/location_service.dart';
 
 void main() {
   testWidgets('SnorkelTrack app smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const SnorkelTrackApp());
+    // Build our app with proper Provider setup.
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (context) => LocationService(),
+        child: const SnorkelTrackApp(),
+      ),
+    );
 
     // Verify that the app title is present.
-    expect(find.text('🏊‍♂️ SnorkelTrack'), findsOneWidget);
+    expect(find.text('SnorkelTrack'), findsOneWidget);
 
-    // Verify that the bottom navigation has the expected tabs.
+    // Verify that the mark spot button is present.
     expect(find.text('Mark Spot'), findsOneWidget);
-    expect(find.text('Navigate'), findsOneWidget);
-    expect(find.text('Spots'), findsOneWidget);
   });
 }
