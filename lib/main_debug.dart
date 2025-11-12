@@ -52,8 +52,32 @@ class _MarkView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // Debug info card
+          Card(
+            color: Colors.blue.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Debug Info:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
+                  const SizedBox(height: 4),
+                  Text('Spots count: ${vm.spots.length}'),
+                  Text('Location loading: ${vm.isLocationLoading}'),
+                  Text('Current lat: ${vm.currentLatitude?.toStringAsFixed(6) ?? 'null'}'),
+                  Text('Current lng: ${vm.currentLongitude?.toStringAsFixed(6) ?? 'null'}'),
+                  Text('Error: ${vm.locationError ?? 'none'}'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: vm.isLocationLoading ? null : vm.markSpot,
+            onPressed: vm.isLocationLoading ? null : () async {
+              print('Mark Spot button pressed!'); // Debug print
+              await vm.markSpot();
+              print('Mark Spot completed, spots count: ${vm.spots.length}'); // Debug print
+            },
             icon: vm.isLocationLoading 
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.add_location),
@@ -93,6 +117,7 @@ class _MarkView extends StatelessWidget {
               itemCount: vm.spots.length,
               itemBuilder: (context, i) => ListTile(
                 title: Text(vm.spots[i].name),
+                subtitle: Text('${vm.spots[i].latitude.toStringAsFixed(6)}, ${vm.spots[i].longitude.toStringAsFixed(6)}'),
                 onTap: () => vm.selectSpot(vm.spots[i]),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),

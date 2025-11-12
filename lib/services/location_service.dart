@@ -54,6 +54,12 @@ class LocationService extends ChangeNotifier {
   Future<void> initialize() async {
     await _loadSpots();
     await _initializeCompass();
+    // Try to get initial location (non-blocking)
+    getCurrentLocation().catchError((e) {
+      if (kDebugMode) {
+        print('Initial location request failed: $e');
+      }
+    });
   }
 
   /// Initialize compass stream
@@ -108,6 +114,7 @@ class LocationService extends ChangeNotifier {
   Future<bool> getCurrentLocation() async {
     _isLocationLoading = true;
     _locationError = null;
+    notifyListeners(); // Immediately update UI to show loading state
 
     try {
       // Check permissions
@@ -115,6 +122,7 @@ class LocationService extends ChangeNotifier {
       if (!permission) {
         _locationError = 'Location permission denied';
         _isLocationLoading = false;
+        notifyListeners(); // Update UI with permission error
         return false;
       }
 
@@ -323,8 +331,28 @@ class LocationService extends ChangeNotifier {
   
   /// Mark a spot at current location with auto-generated name
   Future<void> markSpot() async {
-    final spotCount = spots.length + 1;
-    await addSpotAtCurrentLocation('Spot $spotCount');
+    try {
+      final spotCount = spots.length + 1;
+      if (kDebugMode) {
+        print('Attempting to mark spot $spotCount...');
+      }
+      
+      final success = await addSpotAtCurrentLocation('Spot $spotCount');
+      
+      if (!success) {
+        if (kDebugMode) {
+          print('Failed to mark spot: $_locationError');
+        }
+        // Even if it fails, notify listeners to update any error states
+        notifyListeners();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Exception in markSpot: $e');
+      }
+      _locationError = 'Failed to mark spot: ${e.toString()}';
+      notifyListeners();
+    }
   }
   
   /// Remove a spot by index (for UI compatibility)
@@ -351,8 +379,12 @@ class LocationService extends ChangeNotifier {
     // Calculate rotation relative to current heading
     double rotation = bearing - heading;
     // Normalize to -180 to 180 degrees
-    while (rotation > 180) rotation -= 360;
-    while (rotation < -180) rotation += 360;
+    while (rotation > 180) {
+      rotation -= 360;
+    }
+    while (rotation < -180) {
+      rotation += 360;
+    }
     
     return (rotation, distance);
   }
