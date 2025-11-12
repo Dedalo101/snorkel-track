@@ -339,6 +339,7 @@ class SpotsListScreen extends StatelessWidget {
 
     try {
       final filePath = await locationService.exportSpotsToGpx();
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('GPX exported to: $filePath'),
@@ -394,6 +395,7 @@ class SpotsListScreen extends StatelessWidget {
       while (locationService.spots.isNotEmpty) {
         await locationService.removeSpot(locationService.spots.first.id);
       }
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('All spots cleared')),
       );
@@ -422,6 +424,7 @@ class SpotsListScreen extends StatelessWidget {
 
     if (confirmed) {
       await vm.removeSpotByIndex(index);
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${vm.spots[index].name} deleted')),
       );
