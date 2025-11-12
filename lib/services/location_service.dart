@@ -7,10 +7,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/spot.dart';
+import 'gpx_export_service.dart';
 
 /// Service for managing location and snorkeling spots
 class LocationService extends ChangeNotifier {
   static const String _spotsKey = 'snorkeling_spots';
+  final GpxExportService _gpxExportService = GpxExportService();
 
   // Current location
   Position? _currentPosition;
@@ -59,6 +61,7 @@ class LocationService extends ChangeNotifier {
       if (kDebugMode) {
         print('Initial location request failed: $e');
       }
+      return false; // Return a default value for error handler
     });
   }
 
@@ -68,10 +71,11 @@ class LocationService extends ChangeNotifier {
       _compassSubscription =
           FlutterCompass.events?.listen((CompassEvent event) {
         _currentHeading = event.heading;
+        // Always update navigation if we have a target, regardless of current navigation state
         if (_targetLatitude != null && _targetLongitude != null) {
           _updateNavigation();
         }
-        notifyListeners(); // Notify UI of compass updates
+        notifyListeners(); // Always notify UI of compass updates for smooth arrow movement
       });
     } catch (e) {
       if (kDebugMode) {
@@ -396,6 +400,49 @@ class LocationService extends ChangeNotifier {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     final index = ((bearing + 22.5) / 45).floor() % 8;
     return directions[index];
+  }
+
+  // GPX Export functionality
+  
+  /// Export all spots to GPX file
+  Future<String> exportSpotsToGpx({String? fileName}) async {
+    if (_spots.isEmpty) {
+      throw Exception('No spots to export');
+    }
+    return await _gpxExportService.exportToFile(_spots, fileName: fileName);
+  }
+  
+  /// Get GPX content as string
+  String getSpotsAsGpx() {
+    return _gpxExportService.generateGpx(_spots);
+  }
+  
+  /// Import spots from GPX content
+  Future<void> importSpotsFromGpx(String gpxContent) async {
+    try {
+      final importedSpots = _gpxExportService.importFromGpx(gpxContent);
+      
+      // Add imported spots to existing ones
+      for (final spot in importedSpots) {
+        // Generate new ID to avoid conflicts
+        final newSpot = Spot(
+          id: DateTime.now().millisecondsSinceEpoch.toString() + _spots.length.toString(),
+          name: spot.name,
+          latitude: spot.latitude,
+          longitude: spot.longitude,
+          timestamp: spot.timestamp,
+        );
+        _spots.add(newSpot);
+      }
+      
+      await _saveSpots();
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to import GPX: $e');
+      }
+      throw Exception('Failed to import GPX file: ${e.toString()}');
+    }
   }
 
   /// Dispose resources

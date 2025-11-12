@@ -19,8 +19,28 @@ class SnorkelTrackApp extends StatelessWidget {
     return MaterialApp(
       title: 'SnorkelTrack',
       theme: ThemeData(
-          primarySwatch: Colors.teal,
-          scaffoldBackgroundColor: Colors.blue.shade50),
+        brightness: Brightness.dark,
+        primaryColor: Colors.green,
+        scaffoldBackgroundColor: Colors.black,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.green,
+          elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.black,
+            textStyle: const TextStyle(fontFamily: 'monospace'),
+          ),
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.green, fontFamily: 'monospace'),
+          bodyMedium: TextStyle(color: Colors.green, fontFamily: 'monospace'),
+          headlineSmall: TextStyle(color: Colors.green, fontFamily: 'monospace', fontWeight: FontWeight.bold),
+        ),
+        iconTheme: const IconThemeData(color: Colors.green),
+      ),
       home: const SpotNavigatorScreen(),
     );
   }
