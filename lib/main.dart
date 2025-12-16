@@ -118,60 +118,164 @@ class _MarkView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          ElevatedButton.icon(
-            onPressed: vm.isLocationLoading ? null : vm.markSpot,
-            icon: vm.isLocationLoading 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.add_location),
-            label: Text(
-              vm.isLocationLoading ? 'Getting location...' : 'Mark Spot',
-              style: const TextStyle(fontSize: 18),
-            ),
-            style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 60)),
-          ),
-          if (vm.locationError != null) ...[
-            const SizedBox(height: 10),
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400 || screenSize.height < 600;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.all(isSmallScreen ? 8.0 : 16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Main action button - centered and prominent
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                border: Border.all(color: Colors.red.shade200),
-                borderRadius: BorderRadius.circular(8),
+              width: double.infinity,
+              constraints: BoxConstraints(
+                maxWidth: isSmallScreen ? 280 : 400,
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      vm.locationError!,
-                      style: TextStyle(color: Colors.red.shade800),
-                    ),
+              child: ElevatedButton.icon(
+                onPressed: vm.isLocationLoading ? null : vm.markSpot,
+                icon: vm.isLocationLoading
+                    ? SizedBox(
+                        width: isSmallScreen ? 16 : 20,
+                        height: isSmallScreen ? 16 : 20,
+                        child: const CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.add_location),
+                label: Text(
+                  vm.isLocationLoading ? 'Getting location...' : 'Mark Spot',
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 14 : 18,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 20),
-          Expanded(
-            child: ListView.builder(
-              itemCount: vm.spots.length,
-              itemBuilder: (context, i) => ListTile(
-                title: Text(vm.spots[i].name),
-                onTap: () => vm.selectSpot(vm.spots[i]),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => vm.removeSpotByIndex(i),
+                ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(double.infinity, isSmallScreen ? 48 : 60),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 12 : 24,
+                    vertical: isSmallScreen ? 12 : 18,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+
+            // Error display - centered
+            if (vm.locationError != null) ...[
+              SizedBox(height: isSmallScreen ? 8 : 12),
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: isSmallScreen ? 280 : 400,
+                ),
+                padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  border: Border.all(color: Colors.red.shade200),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline,
+                        color: Colors.red.shade600,
+                        size: isSmallScreen ? 16 : 20),
+                    SizedBox(width: isSmallScreen ? 6 : 8),
+                    Expanded(
+                      child: Text(
+                        vm.locationError!,
+                        style: TextStyle(
+                          color: Colors.red.shade800,
+                          fontSize: isSmallScreen ? 12 : 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Spots list - flexible height
+            SizedBox(height: isSmallScreen ? 12 : 20),
+            Expanded(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isSmallScreen ? 320 : 500,
+                ),
+                child: vm.spots.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.place_outlined,
+                              size: isSmallScreen ? 32 : 48,
+                              color: Colors.green.withOpacity(0.5),
+                            ),
+                            SizedBox(height: isSmallScreen ? 8 : 12),
+                            Text(
+                              'No spots marked yet',
+                              style: TextStyle(
+                                color: Colors.green.withOpacity(0.7),
+                                fontSize: isSmallScreen ? 14 : 16,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: isSmallScreen ? 4 : 8),
+                            Text(
+                              'Tap "Mark Spot" to add your first location',
+                              style: TextStyle(
+                                color: Colors.green.withOpacity(0.5),
+                                fontSize: isSmallScreen ? 12 : 14,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: vm.spots.length,
+                        itemBuilder: (context, i) => Container(
+                          margin: EdgeInsets.only(bottom: isSmallScreen ? 4 : 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.green.withOpacity(0.2)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ListTile(
+                            dense: isSmallScreen,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: isSmallScreen ? 12 : 16,
+                              vertical: isSmallScreen ? 4 : 8,
+                            ),
+                            title: Text(
+                              vm.spots[i].name,
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 14 : 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${vm.spots[i].latitude.toStringAsFixed(4)}, ${vm.spots[i].longitude.toStringAsFixed(4)}',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 10 : 12,
+                                color: Colors.green.withOpacity(0.7),
+                              ),
+                            ),
+                            onTap: () => vm.selectSpot(vm.spots[i]),
+                            trailing: IconButton(
+                              icon: Icon(Icons.delete,
+                                  color: Colors.red.shade400,
+                                  size: isSmallScreen ? 20 : 24),
+                              onPressed: () => vm.removeSpotByIndex(i),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -184,28 +288,136 @@ class _NavView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = vm.getNavigationData();
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Transform.rotate(
-            angle: data.$1 * 3.14159 / 180,
-            child: const Icon(Icons.navigation, size: 100),
-          ),
-          Text(vm.selectedSpot!.name,
-              style: Theme.of(context).textTheme.headlineSmall),
-          Text(
-            data.$2 < 1000
-                ? '${data.$2.toInt()}m'
-                : '${(data.$2 / 1000).toStringAsFixed(1)}km',
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-          ElevatedButton(
-            onPressed: vm.stopNavigating,
-            child: const Text('Stop Nav'),
-          ),
-        ],
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400 || screenSize.height < 600;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Compass arrow - centered and prominent
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: isSmallScreen ? 200 : 300,
+                maxHeight: isSmallScreen ? 200 : 300,
+              ),
+              child: Center(
+                child: Transform.rotate(
+                  angle: data.$1 * 3.14159 / 180,
+                  child: Icon(
+                    Icons.navigation,
+                    size: isSmallScreen ? 80 : 100,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(height: isSmallScreen ? 16 : 24),
+
+            // Spot name - centered
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: isSmallScreen ? 280 : 400,
+              ),
+              child: Text(
+                vm.selectedSpot!.name,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontSize: isSmallScreen ? 18 : 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+            SizedBox(height: isSmallScreen ? 12 : 16),
+
+            // Distance display - centered and prominent
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 16 : 24,
+                vertical: isSmallScreen ? 8 : 12,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.green.withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: Text(
+                data.$2 < 1000
+                    ? '${data.$2.toInt()}m'
+                    : '${(data.$2 / 1000).toStringAsFixed(1)}km',
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 24 : 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                  fontFamily: 'monospace',
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            SizedBox(height: isSmallScreen ? 20 : 32),
+
+            // Stop navigation button - centered
+            Container(
+              width: double.infinity,
+              constraints: BoxConstraints(
+                maxWidth: isSmallScreen ? 240 : 300,
+              ),
+              child: ElevatedButton(
+                onPressed: vm.stopNavigating,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                  minimumSize: Size(double.infinity, isSmallScreen ? 44 : 50),
+                  padding: EdgeInsets.symmetric(
+                    vertical: isSmallScreen ? 12 : 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Stop Navigation',
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 14 : 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+            // Optional: Add bearing direction for better navigation (only on larger screens)
+            if (!isSmallScreen) ...[
+              SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  vm.getCompassDirection(data.$1),
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
