@@ -1,11 +1,13 @@
 {
   "words": [
-    "viewmodels",
-    "viewmodel",
-    "prefs",
+    "chartplotters",
     "geolocator",
-    "MVVM",
     "geospatial",
-    "pubspec"
+    "latlong",
+    "MVVM",
+    "prefs",
+    "pubspec",
+    "viewmodel",
+    "viewmodels"
   ]
 }
