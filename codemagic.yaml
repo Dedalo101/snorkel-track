@@ -1,0 +1,60 @@
+workflows:
+  android:
+    name: Android
+    environment:
+      flutter: stable
+      vars:
+        # Provide these in Codemagic UI as secure environment variables
+        # KEYSTORE_BASE64: base64 of keystore.jks
+        # KEYSTORE_PASSWORD: keystore password
+        # KEY_PASSWORD: key password
+        # KEY_ALIAS: key alias
+        KEYSTORE_BASE64: Encrypted
+        KEYSTORE_PASSWORD: Encrypted
+        KEY_PASSWORD: Encrypted
+        KEY_ALIAS: Encrypted
+    scripts:
+      - name: Install dependencies
+        script: |
+          flutter pub get
+      - name: Prepare Android keystore
+        script: |
+          # decode base64 keystore into android/app/keystore.jks
+          echo $KEYSTORE_BASE64 | base64 --decode > android/app/keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=keystore.jks
+          EOF
+      - name: Build Android App Bundle
+        script: |
+          flutter clean
+          flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/bundle/release/app-release.aab
+      - build/app/outputs/flutter-apk/app-release.apk
+
+  ios:
+    name: iOS
+    environment:
+      flutter: stable
+      cocoapods: default
+      vars:
+        # Configure iOS signing via Codemagic UI (App Store Connect API key or upload cert+profile)
+        FLUTTER_BUILD_MODE: release
+    scripts:
+      - name: Install dependencies
+        script: |
+          flutter pub get
+      - name: Build iOS (unsigned - signed by Codemagic signing settings)
+        script: |
+          flutter clean
+          # build iOS without codesigning; Codemagic can sign with uploaded credentials
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/Runner.app
+      - build/ios/ipa/*.ipa
+
+# Triggers can be configured in Codemagic UI or by adding triggers here
+# For example: add `triggers:` to run on push to `main` or on tags
